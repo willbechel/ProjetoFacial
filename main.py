@@ -5,6 +5,7 @@ import os
 import tkinter as tk
 from tkinter import simpledialog
 from tkinter import messagebox
+from threading import Thread
 
 # Diretório para armazenar as imagens e codificações
 KNOWN_FACES_DIR = "known_faces"
@@ -13,6 +14,8 @@ KNOWN_FACES_DIR = "known_faces"
 if not os.path.exists(KNOWN_FACES_DIR):
     os.makedirs(KNOWN_FACES_DIR)
 
+# Variável global para controle da execução do reconhecimento facial
+recognition_running = False
 
 # Função para carregar codificações conhecidas
 def load_known_faces():
@@ -32,16 +35,18 @@ def load_known_faces():
 
     return known_face_encodings, known_face_names
 
-
 # Função para reconhecer rostos
 def recognize_faces():
+    global recognition_running
+    recognition_running = True
+
     # Carregar as codificações conhecidas
     known_face_encodings, known_face_names = load_known_faces()
 
     # Inicializar a webcam
     video_capture = cv2.VideoCapture(0)
 
-    while True:
+    while recognition_running:
         # Capturar um único frame da webcam
         ret, frame = video_capture.read()
 
@@ -85,12 +90,17 @@ def recognize_faces():
 
         # Pressionar 'q' para sair
         if cv2.waitKey(1) & 0xFF == ord('q'):
+            recognition_running = False
             break
 
     # Liberar a webcam e fechar janelas
     video_capture.release()
     cv2.destroyAllWindows()
 
+# Função para parar o reconhecimento facial
+def stop_recognition():
+    global recognition_running
+    recognition_running = False
 
 # Função para cadastrar um novo rosto
 def register_face():
@@ -122,17 +132,16 @@ def register_face():
         # Informar que o cadastro foi bem-sucedido
         messagebox.showinfo("Cadastro", f"{name} cadastrado com sucesso!")
 
-
 # Função principal para iniciar a interface gráfica
 def main():
     root = tk.Tk()
     root.title("Reconhecimento Facial")
 
-    tk.Button(root, text="Reconhecimento Facial", command=recognize_faces).pack(pady=10)
+    tk.Button(root, text="Iniciar Reconhecimento Facial", command=lambda: Thread(target=recognize_faces).start()).pack(pady=10)
+    tk.Button(root, text="Parar Reconhecimento Facial", command=stop_recognition).pack(pady=10)
     tk.Button(root, text="Cadastrar Novo Rosto", command=register_face).pack(pady=10)
 
     root.mainloop()
-
 
 if __name__ == "__main__":
     main()
