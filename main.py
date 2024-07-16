@@ -5,6 +5,7 @@ import os
 import tkinter as tk
 from tkinter import simpledialog
 from tkinter import messagebox
+import time
 
 # Diretório para armazenar as imagens e codificações
 KNOWN_FACES_DIR = "known_faces"
